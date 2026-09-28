@@ -826,3 +826,117 @@ A concise answer:
 
 > We use shift-left controls such as OPA/Conftest in CI to reject non-compliant Terraform before apply, and we also use AWS Organizations SCPs as account-level guardrails so prohibited actions are denied at the AWS API layer. OPA is a CNCF Graduated open-source policy engine, while the actual governance rules are usually defined by the organization.
 
+
+
+---
+
+## Shift-Left Security with GitOps, Terraform Controller and ArgoCD
+
+Shift-left security still applies when deployment is performed by a controller instead of directly by CI.
+
+The important separation is:
+
+~~~text
+CI / Pull Request
+→ decide whether the change is allowed to enter Git
+
+GitOps Controller
+→ reconcile the approved Git state into the target platform
+~~~
+
+### Terraform Controller Flow
+
+~~~text
+Developer changes Terraform
+        ↓
+Pull Request
+        ↓
+terraform fmt / validate
+        ↓
+Checkov
+        ↓
+OPA / Conftest
+        ↓
+review / approval
+        ↓
+Merge
+        ↓
+Git desired state
+        ↓
+Terraform Controller
+        ↓
+plan / apply through controller
+        ↓
+AWS API
+        ↓
+IAM / SCP guardrails
+~~~
+
+The Terraform Controller does not replace shift-left checks. It replaces the direct deployment step and continuously reconciles approved desired state.
+
+### ArgoCD Flow
+
+~~~text
+Developer changes Kubernetes YAML / Helm
+        ↓
+Pull Request
+        ↓
+lint / tests
+        ↓
+Trivy config scan
+        ↓
+OPA / Conftest
+        ↓
+review / approval
+        ↓
+Merge
+        ↓
+Git desired state
+        ↓
+ArgoCD
+        ↓
+Kubernetes API
+        ↓
+Gatekeeper / Kyverno / Pod Security
+        ↓
+allow / deny
+~~~
+
+### Multiple Enforcement Layers
+
+A strong GitOps design uses more than one control point:
+
+~~~text
+Gate 1 - Shift left
+PR / CI
+→ tests, SAST, secrets, Checkov, OPA
+
+Gate 2 - Git governance
+→ code review, approvals, branch protection
+
+Gate 3 - Deployment-time enforcement
+→ Kubernetes admission policy
+→ AWS IAM / SCP / cloud controls
+
+Gate 4 - Runtime detection
+→ WAF, monitoring, SIEM, alerts
+~~~
+
+This creates defense in depth.
+
+### Key Distinction
+
+~~~text
+CI/CD security gate
+→ Should this change enter Git?
+
+ArgoCD / Terraform Controller
+→ Make actual state match approved Git state.
+
+Gatekeeper / Kyverno / SCP
+→ Is this deployment allowed at the platform control plane?
+~~~
+
+### Interview Answer
+
+> In a GitOps model, I keep security gates before merge. CI runs tests, IaC scanning, secret scanning and OPA/Conftest on the pull request. Only compliant changes are merged into the desired-state repository. ArgoCD or Terraform Controller then reconciles that approved state. I also keep deployment-time enforcement using Kubernetes admission policies such as Gatekeeper or Kyverno, and AWS guardrails such as IAM and SCP. GitOps does not remove shift-left; it adds a controlled reconciliation layer.
