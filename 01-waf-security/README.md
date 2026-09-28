@@ -1,3 +1,5 @@
+> **Study material:** [Theory & Interview Q&A](./theory-and-qa.md) · [CloudWatch Logs Insights Queries](./queries.md) · [Screenshot Evidence Checklist](./screenshots/README.md)
+
 # Lab 01 - AWS WAF Security, Tuning and Alerting
 
 ## Objective
