@@ -65,9 +65,25 @@ Covered:
 
 See: [02-policy-as-code](./02-policy-as-code/README.md)
 
+### 03 - Terraform IaC Security Scanning with Checkov
+Hands-on Terraform security scanning lab using Checkov to detect public SSH exposure, S3 security gaps, remediation, scoped exceptions, scanner-version troubleshooting, and CI/CD gate behavior.
+
+Covered:
+- Checkov built-in IaC policies
+- Public SSH detection and remediation
+- S3 Public Access Block
+- S3 versioning exception handling
+- PASS / FAIL / SKIP semantics
+- Resource-level suppression vs global skip
+- Soft-fail concepts
+- Source and Terraform plan scanning
+- Checkov vs OPA
+- Scanner lifecycle/version troubleshooting
+
+See: [03-terraform-iac-security](./03-terraform-iac-security/README.md)
+
 ## Planned Labs
 
-- 03 - Terraform IaC security scanning
 - 04 - CI/CD security gates: SAST, SCA, secrets and container scanning
 - 05 - Kubernetes security: RBAC, NetworkPolicy, Pod Security and ingress
 - 06 - IAM, IRSA, Secrets Manager and KMS
