@@ -1,0 +1,17 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+tfexception
+terraform.tfvars
+*.tfvars
+.env
+.env.*
+*.pem
+*.key
+credentials
+secrets.*
+.DS_Store
+.vscode/
+.idea/
