@@ -48,9 +48,25 @@ Covered:
 
 See: [01-waf-security](./01-waf-security/README.md)
 
+### 02 - Policy as Code with OPA / Conftest
+Hands-on Policy as Code lab that inspects Terraform plan JSON with Rego, proves an insecure SSH rule is denied, and demonstrates how Conftest returns a CI/CD-friendly non-zero exit code.
+
+Covered:
+- OPA and Rego basics
+- Terraform plan JSON
+- Custom organizational policy
+- Public SSH detection
+- Conftest security gate
+- FAIL / exit-code behavior
+- PASS workflow
+- CI/CD integration concepts
+- OPA vs Checkov vs Sentinel
+- Gatekeeper and Kyverno overview
+
+See: [02-policy-as-code](./02-policy-as-code/README.md)
+
 ## Planned Labs
 
-- 02 - Policy as Code with OPA / Conftest
 - 03 - Terraform IaC security scanning
 - 04 - CI/CD security gates: SAST, SCA, secrets and container scanning
 - 05 - Kubernetes security: RBAC, NetworkPolicy, Pod Security and ingress
