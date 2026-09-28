@@ -1,0 +1,36 @@
+# Secure comparison example.
+# This file uses the .example suffix so Terraform will not load it automatically.
+#
+# For the PASS experiment, replace the insecure CIDR in main.tf with a
+# trusted/private CIDR appropriate for your environment.
+
+terraform {
+  required_version = ">= 1.5.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_security_group" "ssh_restricted" {
+  name        = "opa-policy-lab-secure"
+  description = "OPA Policy as Code secure comparison"
+
+  ingress {
+    description = "SSH restricted to a trusted/private network"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+
+    cidr_blocks = [
+      "10.0.0.0/8"
+    ]
+  }
+}
