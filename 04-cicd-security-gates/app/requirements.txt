@@ -1,0 +1,5 @@
+# Intentionally old versions are kept for the SCA experiment.
+# Trivy should report known vulnerabilities and demonstrate a blocking gate.
+Flask==2.0.3
+Werkzeug==2.0.3
+requests==2.27.1
