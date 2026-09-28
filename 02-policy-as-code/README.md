@@ -667,3 +667,162 @@ terraform apply
 against the insecure example.
 
 Generated plan/state artifacts should remain local and must not be committed.
+
+---
+
+## AWS SCP vs OPA / Conftest
+
+AWS Organizations **Service Control Policies (SCPs)** can also block deployments, but they operate at a different layer from OPA/Conftest.
+
+### Control flow
+
+~~~text
+Developer writes Terraform
+        ↓
+OPA / Conftest in CI
+        ↓
+Shift-left policy check
+        ↓
+terraform apply
+        ↓
+AWS IAM permissions
+        ↓
+AWS Organizations SCP
+        ↓
+AWS API accepts or denies the action
+~~~
+
+### Key difference
+
+**OPA / Conftest**
+
+~~~text
+Pre-deployment
+CI/CD
+Developer feedback
+Shift-left
+Custom organization policy
+~~~
+
+**AWS SCP**
+
+~~~text
+AWS Organizations / account guardrail
+Enforced when the AWS API action is attempted
+Defines the maximum permissions available to accounts/OUs
+Can deny an action even if IAM allows it
+~~~
+
+SCPs do not grant permissions by themselves. They limit what permissions can be effective.
+
+Example:
+
+~~~text
+Policy:
+Production EC2 must run only in approved regions
+
+OPA / Conftest:
+Terraform plan checked in CI
+→ FAIL before apply
+
+SCP:
+terraform apply reaches AWS
+→ AWS API denies the action
+~~~
+
+The strongest design is layered:
+
+~~~text
+Shift-left
+OPA / Conftest / Checkov / Sentinel
+        ↓
+Cloud / account guardrails
+SCP / IAM / Control Tower / Config
+        ↓
+Admission / runtime controls
+Gatekeeper / Kyverno / WAF / monitoring
+~~~
+
+### Is SCP shift-left?
+
+Not usually in the strict sense.
+
+OPA/Conftest in CI is a clear **shift-left** control because the problem is detected before deployment reaches the cloud API.
+
+SCP is a **preventive cloud governance guardrail**. It still prevents a bad deployment, but it does so later, at AWS API enforcement time.
+
+### Example layered protection
+
+~~~text
+Rule:
+Do not allow SSH from 0.0.0.0/0
+
+Layer 1:
+OPA / Conftest
+→ catches it in pull request / pipeline
+
+Layer 2:
+IAM / SCP
+→ prevents disallowed AWS API operations or configurations at account level
+
+Layer 3:
+Cloud monitoring / Config / Security Hub
+→ detects drift or policy violations after deployment
+~~~
+
+---
+
+## CNCF, OPA and Policy Standards
+
+OPA is an open-source **CNCF Graduated** project.
+
+Important distinction:
+
+~~~text
+CNCF / OPA provides:
+- policy engine
+- ecosystem
+- reusable tooling
+
+Your organization provides:
+- actual governance rules
+- approved regions
+- required tags
+- allowed CIDRs
+- encryption requirements
+- instance-type restrictions
+- production policies
+~~~
+
+So there is **not one universal CNCF policy file** that every company uses.
+
+The policy engine is standardized/reusable, but the rules are normally organization-specific.
+
+### Mental model
+
+~~~text
+OPA
+= policy engine
+
+Rego
+= policy language
+
+Conftest
+= CLI for testing configuration with OPA/Rego
+
+Gatekeeper
+= Kubernetes admission control using OPA concepts
+
+Kyverno
+= Kubernetes-native policy engine
+
+SCP
+= AWS Organizations account-level guardrail
+~~~
+
+### Interview answer
+
+A concise answer:
+
+> We use shift-left controls such as OPA/Conftest in CI to reject non-compliant Terraform before apply, and we also use AWS Organizations SCPs as account-level guardrails so prohibited actions are denied at the AWS API layer. OPA is a CNCF Graduated open-source policy engine, while the actual governance rules are usually defined by the organization.
+
