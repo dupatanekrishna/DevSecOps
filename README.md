@@ -82,9 +82,26 @@ Covered:
 
 See: [03-terraform-iac-security](./03-terraform-iac-security/README.md)
 
+### 04 - End-to-End CI/CD Security Gates
+Hands-on pipeline lab combining unit tests, coverage, secret scanning, SAST, SonarQube, SCA, IaC security, custom Policy as Code, container scanning, DAST, and GitHub Actions enforcement.
+
+Covered:
+- pytest + coverage gates
+- Python/runtime dependency compatibility troubleshooting
+- Gitleaks secret scanning and why commented secrets still count
+- Semgrep SAST and blocking exit-code behavior
+- SonarQube centralized projects, coverage, Quality Gates and environment separation
+- Trivy SCA and vulnerability severity vs remediation priority
+- Docker image hardening, image-size basics, non-root execution and EXPOSE vs port mapping
+- Checkov + OPA/Conftest in CI
+- GitOps / ArgoCD / Terraform Controller shift-left model
+- OWASP ZAP baseline/full DAST and DAST discovery limitations
+- GitHub Actions end-to-end security pipeline
+
+See: [04-cicd-security-gates](./04-cicd-security-gates/README.md)
+
 ## Planned Labs
 
-- 04 - CI/CD security gates: SAST, SCA, secrets and container scanning
 - 05 - Kubernetes security: RBAC, NetworkPolicy, Pod Security and ingress
 - 06 - IAM, IRSA, Secrets Manager and KMS
 - 07 - Security observability and incident workflows
