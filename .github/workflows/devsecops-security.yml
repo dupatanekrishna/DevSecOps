@@ -1,0 +1,223 @@
+name: DevSecOps Security Pipeline
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Unit Tests + Coverage
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 04-cicd-security-gates
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r app/requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run tests and enforce coverage
+        run: |
+          pytest             --cov=app             --cov-report=xml:coverage.xml             --cov-fail-under=70
+
+  gitleaks:
+    name: Gitleaks Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Scan source for secrets
+        run: |
+          docker run --rm             -v "$PWD:/repo"             zricethezav/gitleaks:latest             dir /repo/04-cicd-security-gates/app             --config /repo/04-cicd-security-gates/.gitleaks.toml
+
+  semgrep:
+    name: Semgrep SAST
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Run blocking SAST scan
+        run: |
+          semgrep scan             --config auto             --error             04-cicd-security-gates/app/
+
+  trivy-sca:
+    name: Trivy SCA
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Scan dependencies
+        run: |
+          docker run --rm             -v "$PWD:/repo"             aquasec/trivy:latest             fs             --scanners vuln             --severity HIGH,CRITICAL             --exit-code 1             /repo/04-cicd-security-gates/app
+
+  iac-security:
+    name: Checkov + OPA Policy Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Checkov
+        run: pip install checkov
+
+      - name: Run selected Checkov baseline
+        run: |
+          checkov             -d 03-terraform-iac-security/terraform             --framework terraform             --check CKV_AWS_24,CKV_AWS_19,CKV_AWS_21,CKV2_AWS_6
+
+      - name: Create secure Terraform plan fixture
+        run: |
+          cat > /tmp/secure-plan.json <<'EOF'
+          {
+            "resource_changes": [
+              {
+                "address": "aws_security_group.restricted_ssh",
+                "type": "aws_security_group",
+                "change": {
+                  "after": {
+                    "ingress": [
+                      {
+                        "from_port": 22,
+                        "to_port": 22,
+                        "cidr_blocks": ["10.0.0.0/8"]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+          EOF
+
+      - name: Run Conftest custom policy
+        run: |
+          docker run --rm             -v "$PWD:/repo"             -v /tmp:/tmp             openpolicyagent/conftest:latest             test /tmp/secure-plan.json             --policy /repo/02-policy-as-code/policy
+
+  container-security:
+    name: Container Build + Trivy Scan
+    runs-on: ubuntu-latest
+    needs:
+      - unit-tests
+      - gitleaks
+      - semgrep
+      - trivy-sca
+      - iac-security
+    defaults:
+      run:
+        working-directory: 04-cicd-security-gates
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t devsecops-security-lab:ci .
+
+      - name: Scan image
+        run: |
+          docker run --rm             -v /var/run/docker.sock:/var/run/docker.sock             aquasec/trivy:latest             image             --severity HIGH,CRITICAL             --ignore-unfixed             --exit-code 1             devsecops-security-lab:ci
+
+  dast:
+    name: OWASP ZAP DAST
+    runs-on: ubuntu-latest
+    needs:
+      - container-security
+    defaults:
+      run:
+        working-directory: 04-cicd-security-gates
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build DAST image
+        run: docker build -t devsecops-security-lab:dast .
+
+      - name: Create test network
+        run: docker network create devsecops-lab
+
+      - name: Start application
+        run: |
+          docker run -d             --name devsecops-app             --network devsecops-lab             -p 8080:8080             devsecops-security-lab:dast
+
+      - name: Wait for application
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:8080/; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs devsecops-app
+          exit 1
+
+      - name: Run ZAP full scan
+        run: |
+          docker run --rm             --network devsecops-lab             -v "$PWD:/zap/wrk/:rw"             ghcr.io/zaproxy/zaproxy:stable             zap-full-scan.py             -t http://devsecops-app:8080             -r zap-full-report.html             -I
+
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-security-report
+          path: 04-cicd-security-gates/zap-full-report.html
+
+  sonarqube:
+    name: SonarQube Quality Gate (Optional Self-Hosted)
+    if: ${{ vars.ENABLE_LOCAL_SONAR == 'true' }}
+    runs-on:
+      - self-hosted
+    defaults:
+      run:
+        working-directory: 04-cicd-security-gates
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install test dependencies
+        run: |
+          pip install -r app/requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Generate coverage
+        run: pytest --cov=app --cov-report=xml:coverage.xml
+
+      - name: SonarQube scan and Quality Gate
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        run: |
+          sonar-scanner             -Dsonar.host.url="$SONAR_HOST_URL"             -Dsonar.token="$SONAR_TOKEN"             -Dsonar.qualitygate.wait=true
