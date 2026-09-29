@@ -16,3 +16,17 @@ secrets.*
 .vscode/
 .idea/
 tfplan.json
+
+# Python / test artifacts
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Security scan artifacts
+zap-report.html
+zap-full-report.html
+.sonar/
