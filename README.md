@@ -106,6 +106,20 @@ See: [04-cicd-security-gates](./04-cicd-security-gates/README.md)
 - 06 - IAM, IRSA, Secrets Manager and KMS
 - 07 - Security observability and incident workflows
 
+## What You Should Be Able to Explain After Completing These Labs
+
+You should be able to:
+
+- Explain how security controls move from design to enforcement through IaC and CI/CD.
+- Distinguish preventive controls, detective controls, and operational validation.
+- Explain how AWS WAF rules, managed protections, labels, metrics, logs, and alerting work together.
+- Explain why narrowly scoped exceptions are safer than disabling broad protections.
+- Describe how OPA/Conftest and Checkov enforce different kinds of infrastructure policy.
+- Explain how SAST, SCA, secret scanning, IaC scanning, container scanning, DAST, and quality gates fit into a delivery pipeline.
+- Reason about blocking versus advisory security gates and when each is appropriate.
+- Troubleshoot scanner failures, false positives, dependency issues, and CI/CD enforcement behavior.
+- Explain how GitOps and policy checks can shift security earlier in the delivery lifecycle.
+
 ## Security Note
 
 This repository contains lab examples only. Do not commit:
