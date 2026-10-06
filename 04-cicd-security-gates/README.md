@@ -221,7 +221,7 @@ Coverage displayed in dashboard
 
 High coverage does **not** prove the tests are good. Weak assertions can still execute many lines.
 
-### Interview answer
+### Engineering Explanation
 
 > Code coverage measures how much of the codebase is exercised by automated tests. I can enforce a minimum threshold in CI, but I do not treat coverage percentage alone as proof of test quality.
 
@@ -1229,7 +1229,7 @@ This demonstrates the complete shift-left lifecycle.
 
 ---
 
-# Interview Q&A
+# Knowledge Check
 
 ## What is shift-left security?
 
