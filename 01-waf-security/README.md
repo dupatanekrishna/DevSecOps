@@ -1,4 +1,4 @@
-> **Study material:** [Theory & Interview Q&A](./theory-and-qa.md) · [CloudWatch Logs Insights Queries](./queries.md)
+> **Engineering review:** [Theory, Engineering Reasoning & Knowledge Check](./engineering-review.md) · [CloudWatch Logs Insights Queries](./queries.md)
 
 # Lab 01 - AWS WAF Security, Tuning and Alerting
 
@@ -73,6 +73,7 @@ AWS WAF
 ~~~text
 01-waf-security/
 ├── README.md
+├── engineering-review.md
 ├── queries.md
 └── terraform/
     ├── providers.tf
@@ -382,20 +383,20 @@ terraform plan -destroy -out=destroy.tfplan
 terraform apply destroy.tfplan
 ~~~
 
-## Interview Revision
+## What You Should Be Able to Explain After Completing This Lab
 
-- WAF protects Layer-7 HTTP traffic; AWS Shield is the primary AWS DDoS protection service.
-- AWS Managed Rule Groups contain many child rules maintained by AWS.
-- COUNT records a match but allows evaluation to continue.
-- BLOCK terminates the request.
-- ALLOW is also terminating and should not be confused with COUNT.
-- Use logs to identify the rule group, exact child rule, request field and matched data.
-- Do not disable a complete managed rule group for one false positive.
-- Prefer narrow exceptions based on endpoint, parameter, label or other application context.
-- WAF metrics answer "how much"; WAF logs answer "why".
-- CloudWatch Logs Insights is useful for investigation and traffic-pattern analysis.
-- CloudWatch alarms and SNS convert detections into actionable notifications.
-- Keep infrastructure and security policy changes version-controlled through Terraform.
+- Where AWS WAF fits in a CloudFront architecture and what it inspects.
+- The difference between AWS WAF and AWS Shield.
+- How managed rule groups, child rules, labels, priorities, custom rules, and rate-based rules work together.
+- Why COUNT mode is useful before enforcing a new or tuned rule.
+- How to investigate and narrowly tune a false positive.
+- Why a 403 response does not automatically mean WAF blocked the request.
+- How WAF metrics and logs support different operational questions.
+- How CloudWatch Logs Insights, alarms, and SNS support investigation and notification.
+- How CloudFront OAC enables a private S3 origin.
+- Why Terraform plan review and version-controlled security configuration improve operational safety.
+
+Use the [Engineering Reasoning & Knowledge Check](./engineering-review.md) to validate that understanding with scenario-based questions.
 
 ## Security / Compliance
 
