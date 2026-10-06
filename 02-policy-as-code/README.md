@@ -509,7 +509,7 @@ Sentinel policy
 pass / fail
 ~~~
 
-For interviews, the important concept is broader than the specific product:
+The important engineering concept is broader than the specific product:
 
 > Security policy should be version-controlled, reviewable, testable and automatically enforced before deployment.
 
@@ -596,7 +596,7 @@ The entire objective is to catch the violation **before apply**.
 
 ---
 
-## Interview Q&A
+## Knowledge Check
 
 ### What is Policy as Code?
 
@@ -820,13 +820,11 @@ SCP
 = AWS Organizations account-level guardrail
 ~~~
 
-### Interview answer
+### Engineering Explanation
 
-A concise answer:
+A concise explanation:
 
 > We use shift-left controls such as OPA/Conftest in CI to reject non-compliant Terraform before apply, and we also use AWS Organizations SCPs as account-level guardrails so prohibited actions are denied at the AWS API layer. OPA is a CNCF Graduated open-source policy engine, while the actual governance rules are usually defined by the organization.
-
-
 
 ---
 
@@ -937,6 +935,6 @@ Gatekeeper / Kyverno / SCP
 → Is this deployment allowed at the platform control plane?
 ~~~
 
-### Interview Answer
+### Engineering Explanation
 
 > In a GitOps model, I keep security gates before merge. CI runs tests, IaC scanning, secret scanning and OPA/Conftest on the pull request. Only compliant changes are merged into the desired-state repository. ArgoCD or Terraform Controller then reconciles that approved state. I also keep deployment-time enforcement using Kubernetes admission policies such as Gatekeeper or Kyverno, and AWS guardrails such as IAM and SCP. GitOps does not remove shift-left; it adds a controlled reconciliation layer.
