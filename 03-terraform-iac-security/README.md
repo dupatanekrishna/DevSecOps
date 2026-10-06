@@ -514,7 +514,7 @@ Any hard-fail security stage returns a non-zero exit code and prevents the deplo
 
 ---
 
-## Interview Q&A
+## Knowledge Check
 
 ### What is Checkov?
 
